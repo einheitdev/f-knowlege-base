@@ -1,0 +1,13 @@
+name: "pkt.dst_port == 0x10000 (hex 65536) is rejected"
+# Hex form of port-out-of-range. Should produce the same error as
+# decimal 65536; checks the hex parse path.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto == tcp and pkt.dst_port == 0x10000
+  default allow
+
+test_packet:
+  builder: tcp(dst_port=80)
+
+expected:
+  compiles: false

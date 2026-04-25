@@ -1,0 +1,17 @@
+name: "pkt.proto != tcp does not satisfy port-field guard"
+# Per spec FWL_V01_SPEC.md:152-153 port access requires
+# `pkt.proto == tcp or pkt.proto == udp` to be true on the path. A
+# negated comparison narrows the proto set logically (!= tcp means
+# {udp, icmp}) but the spec rule is a positive equality requirement.
+# The analyzer rejects (consistent with the strict spec reading).
+# Confirm rejection.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto != tcp and pkt.dst_port == 80
+  default allow
+
+test_packet:
+  builder: udp(dst_port=80)
+
+expected:
+  compiles: false

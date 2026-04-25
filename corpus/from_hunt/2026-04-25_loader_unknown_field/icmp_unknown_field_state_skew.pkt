@@ -1,0 +1,38 @@
+name: "icmp(src_port=...) + state at bucket 0: oracle skew (interp:allow, bpf:drop)"
+# Companion to icmp_with_unknown_src_port_field.pkt. With state
+# pre-populated at bucket 0 (where the BPF rate_limit gate looks
+# because src_port is read 0 for ICMP frames), the AST interpreter —
+# which sees the spurious decoded src_port=12345 from the .pkt
+# loader's silent acceptance — looks up bucket 12345 (empty),
+# returns "below threshold", and lets the packet pass.
+#
+# The BPF runtime would look up bucket 0 with count=5, find cur=5 >=
+# threshold=3, and drop.
+#
+# Expected XDP action: drop, per the actual ICMP packet on the wire
+# and the rate_limit state. The interpreter is wrong here, not
+# because of an interpreter bug, but because the .pkt loader
+# corrupted the decoded fields with a non-existent ICMP attribute.
+#
+# Status: BPF_PROG_RUN unavailable in this environment, so the divergence
+# is provable only by reading both oracles' code. With BPF runtime
+# enabled this case is the visible, runtime symptom of the loader bug.
+source_fw: |
+  @xdp(eth0)
+  drop limited by rate_limit(3, per=src_port)
+  default allow
+
+state:
+  rate_limit:
+    0:
+      0: 5
+
+test_packet:
+  builder: icmp(src_port=12345)
+
+expected:
+  # Post-fix: pkt.load rejects icmp(src_port=...) before the loader
+  # can leak a phantom src_port into the decoded fields. The
+  # interpreter↔BPF skew this case demonstrated is no longer
+  # reachable from a single corpus author's mistake.
+  loads: false

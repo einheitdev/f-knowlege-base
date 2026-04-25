@@ -1,0 +1,19 @@
+name: "count tcp uses a reserved keyword as counter name"
+# Spec FWL_V01_SPEC.md:39 says identifiers match [a-z_][a-z0-9_]*
+# and "appear as: built-in names (rate_limit, tcp, udp, icmp), ...
+# and counter names in count <n>". The text leaves open whether
+# tcp/udp/icmp can also serve as counter names. The grammar lexes
+# bare 'tcp' as PROTO_KEYWORD, so the parser will reject this with a
+# syntax error — but the spec doesn't list this as a compile error.
+# Either the spec needs an explicit "reserved words can't be counter
+# names" clause, or the grammar needs to allow it. Class B candidate.
+source_fw: |
+  @xdp(eth0)
+  count tcp if pkt.proto == tcp
+  default allow
+
+test_packet:
+  builder: tcp(dst_port=80)
+
+expected:
+  compiles: false

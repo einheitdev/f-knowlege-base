@@ -1,0 +1,26 @@
+name: "rate_limit: Nth packet does not fire (pre-increment semantics)"
+# Post-fix: spec bullets at FWL_V01_SPEC.md:290-292 now say
+# "pre-increment count >= threshold" — matching the impl and the
+# example. With state count=9, threshold=10, this is the 10th
+# matching packet; pre-increment 9 >= 10 is false, so the drop rule
+# does not fire and the packet falls through to default allow.
+#
+# This .pkt is the anti-regression for the spec-bullets fix —
+# revert the bullets text and this case starts expecting drop again.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto == tcp and pkt.dst_port == 22
+         limited by rate_limit(10, per=src_ip)
+  default allow
+
+state:
+  rate_limit:
+    0:
+      "9.9.9.9": 9
+
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: allow

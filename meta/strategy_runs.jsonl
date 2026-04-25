@@ -7,3 +7,9 @@
 {"ts": "2026-04-25T19:17:52.702730+00:00", "strategy": "transfer", "hits": 0, "cost_usd": 0.0}
 {"ts": "2026-04-25T19:19:04.534350+00:00", "strategy": "boundary_probing", "hits": 0, "cost_usd": 0.0}
 {"ts": "2026-04-25T19:19:04.534671+00:00", "strategy": "oracle_divergence", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:38:44.861853+00:00", "strategy": "hunt", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:38:44.862186+00:00", "strategy": "mutate", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:38:44.862339+00:00", "strategy": "transfer", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T20:15:33.047469+00:00", "strategy": "hunt", "hits": 3, "cost_usd": 6.52}
+{"ts": "2026-04-25T20:15:33.048212+00:00", "strategy": "mutate", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T20:15:33.048381+00:00", "strategy": "transfer", "hits": 0, "cost_usd": 0.0}

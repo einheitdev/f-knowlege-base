@@ -1,28 +1,28 @@
 {
   "weights": {
-    "hunt": 0.205822147948878,
-    "mutate": 0.17305826239064453,
-    "transfer": 0.17305826239064453,
-    "boundary_probing": 0.22403066363491642,
-    "oracle_divergence": 0.22403066363491642
+    "hunt": 0.21964014821412603,
+    "mutate": 0.14672664196431234,
+    "transfer": 0.14672664196431234,
+    "boundary_probing": 0.24345328392862464,
+    "oracle_divergence": 0.24345328392862464
   },
   "stats": {
     "hunt": {
       "name": "hunt",
-      "hits": 2,
-      "runs": 3,
-      "cost_usd": 9.26
+      "hits": 5,
+      "runs": 5,
+      "cost_usd": 15.78
     },
     "mutate": {
       "name": "mutate",
       "hits": 0,
-      "runs": 2,
+      "runs": 4,
       "cost_usd": 0.0
     },
     "transfer": {
       "name": "transfer",
       "hits": 0,
-      "runs": 2,
+      "runs": 4,
       "cost_usd": 0.0
     },
     "boundary_probing": {
@@ -38,5 +38,5 @@
       "cost_usd": 0.0
     }
   },
-  "last_tuned": "2026-04-25T19:19:09.684287+00:00"
+  "last_tuned": "2026-04-25T20:15:33.113754+00:00"
 }

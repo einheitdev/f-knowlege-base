@@ -1,0 +1,17 @@
+name: "OR-branch guards union — (tcp and syn) or (udp and port==80)"
+# Per spec FWL_V01_SPEC.md:178-190 the per-branch guards in OR
+# combine via union. The TCP branch establishes a TCP guard for
+# pkt.tcp.syn; the UDP branch establishes a UDP guard for dst_port.
+# The whole expression should compile.
+source_fw: |
+  @xdp(eth0)
+  drop if (pkt.proto == tcp and pkt.tcp.syn)
+       or (pkt.proto == udp and pkt.dst_port == 80)
+  default allow
+
+test_packet:
+  builder: udp(dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: drop

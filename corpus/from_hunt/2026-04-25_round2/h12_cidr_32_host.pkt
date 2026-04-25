@@ -1,0 +1,13 @@
+name: "CIDR /32 single-host match — boundary"
+# /32 sets mask = 0xFFFFFFFF; the rule should match only that exact IP.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip in 192.168.1.5/32
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="192.168.1.5")
+
+expected:
+  compiles: true
+  bpf_action: drop

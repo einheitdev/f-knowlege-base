@@ -1,0 +1,14 @@
+name: "IPv4 literal 256.0.0.1 (octet >255) is rejected"
+# Spec FWL_V01_SPEC.md:614: octet must be 0..255. The grammar regex
+# accepts up to 3 digits per octet so the parser will lex it; the
+# semantic pass should reject with a clear message.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip == 256.0.0.1
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="1.1.1.1")
+
+expected:
+  compiles: false

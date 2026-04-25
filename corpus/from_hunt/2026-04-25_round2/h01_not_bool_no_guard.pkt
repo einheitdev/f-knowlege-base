@@ -1,0 +1,14 @@
+name: "drop if not pkt.tcp.syn (no proto guard) must be rejected"
+# Per FWL_V01_SPEC.md:152-153 pkt.tcp.syn requires `pkt.proto == tcp`
+# guard on the path. `not pkt.tcp.syn` is still an access of the field
+# and therefore needs the guard. Expect compile failure.
+source_fw: |
+  @xdp(eth0)
+  drop if not pkt.tcp.syn
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4", dst_port=22, syn=true)
+
+expected:
+  compiles: false

@@ -1,0 +1,28 @@
+name: "state.rate_limit.0 references a rule with no rate_limit modifier"
+# PKT_V01_SPEC.md:256: "state.rate_limit references rule index without
+# a modifier" must produce "error: rule <idx> has no rate_limit
+# modifier" at load time.
+#
+# Implementation in fwl/pkt.py and fwl/runner.py silently accepts the
+# state and never surfaces it. The runner skips the bogus index when
+# building map_init (runner._build_map_init line 220), and the
+# interpreter just reads state.get(rule_idx, {}) without verifying
+# the rule has a modifier. Result: a corpus author who typos a rule
+# index gets a green test that does NOT exercise their state.
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.proto == tcp
+  default drop
+
+state:
+  rate_limit:
+    0:
+      "1.2.3.4": 999
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4")
+
+expected:
+  # Post-fix: pkt.load rejects state.rate_limit indices that
+  # reference a rule without a rate_limit modifier.
+  loads: false

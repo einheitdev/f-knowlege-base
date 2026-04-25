@@ -1,0 +1,14 @@
+name: "default log: program must be rejected (spec error #11)"
+# FWL_V01_SPEC.md:407 mandates the specific error
+# "'default' action must be 'allow' or 'drop'; '<action>' is non-terminal"
+# for non-terminal as default. This case asserts only the rejection;
+# message-text matching is for findings, not the runner.
+source_fw: |
+  @xdp(eth0)
+  default log
+
+test_packet:
+  builder: tcp()
+
+expected:
+  compiles: false

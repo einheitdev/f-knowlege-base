@@ -1,0 +1,32 @@
+name: "loader silently accepts icmp(src_port=12345)"
+# PKT_V01_SPEC.md:253: "Builder field not in the constructor's table:
+# error: unknown <proto> field '<name>'". The icmp constructor's
+# field table (PKT_V01_SPEC.md:222-228) lists only src_ip and dst_ip;
+# src_port is unknown.
+#
+# Implementation in fwl/pkt.py loads this file without error and
+# copies src_port=12345 into the decoded fields dict (line 240's
+# `decoded = dict(fields)` keeps every user-supplied key). The wire
+# bytes are still a real ICMP frame with no L4 ports.
+#
+# This .pkt is shaped so the interpreter and the (unavailable here)
+# BPF runtime happen to agree on XDP_PASS: bucket 12345 has no entry,
+# bucket 0 has no entry, so both fall through to "0 >= threshold" =
+# False and the rule does not fire. Same XDP_PASS, but the oracles
+# get there by inspecting DIFFERENT buckets — a Class A divergence
+# is latent and surfaces under any state where bucket 0 != bucket
+# 12345. See companion .pkt under
+# corpus/from_hunt/2026-04-25_loader_unknown_field/ for the
+# state-bearing case.
+source_fw: |
+  @xdp(eth0)
+  drop limited by rate_limit(3, per=src_port)
+  default allow
+
+test_packet:
+  builder: icmp(src_port=12345)
+
+expected:
+  # Post-fix: pkt.load rejects unknown builder fields per
+  # PKT_V01_SPEC.md:253. ICMP only allows {src_ip, dst_ip}.
+  loads: false

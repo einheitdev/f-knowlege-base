@@ -1,0 +1,23 @@
+name: "state.rate_limit.99 references a rule index that doesn't exist"
+# PKT_V01_SPEC.md:256: same contract as
+# state_for_rule_without_modifier.pkt. The loader should error.
+# Instead, runner._build_map_init line 217 silently `continue`s past
+# rule_idx >= len(program.rules), and the interpreter never inspects
+# the index either. The bogus state is a no-op.
+source_fw: |
+  @xdp(eth0)
+  allow
+
+state:
+  rate_limit:
+    99:
+      "1.2.3.4": 5
+
+test_packet:
+  builder: tcp()
+
+expected:
+  # Post-fix: pkt.load rejects state.rate_limit indices that don't
+  # point at a real rate_limit-bearing rule. This case asserts the
+  # loader catches the regression.
+  loads: false

@@ -1,0 +1,15 @@
+name: "pkt.dst_port == 65535 is valid (boundary)"
+# Spec FWL_V01_SPEC.md:404 — port literal must be 0..65535.
+# 65535 is the inclusive upper bound; the rule should compile and
+# match a packet with dst_port=65535.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto == tcp and pkt.dst_port == 65535
+  default allow
+
+test_packet:
+  builder: tcp(dst_port=65535)
+
+expected:
+  compiles: true
+  bpf_action: drop

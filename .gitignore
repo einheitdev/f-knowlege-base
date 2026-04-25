@@ -1,0 +1,4 @@
+# Per-hunt CLI debug logs from claude-code-sdk; kept on disk for the
+# operator to inspect after a crash, not part of the kb's tracked
+# state.
+meta/hunt-stderr-*.log

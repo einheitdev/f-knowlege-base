@@ -1,0 +1,14 @@
+name: "pkt.src_ip > 1.2.3.4 (ordered compare on IP) is rejected"
+# Spec FWL_V01_SPEC.md:213-217: ordered comparisons (<, <=, >, >=) are
+# numeric only and only valid with port (u16) fields. IP fields support
+# only ==, !=, in. So `pkt.src_ip > 1.2.3.4` must be rejected.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip > 1.2.3.4
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="2.2.2.2")
+
+expected:
+  compiles: false
