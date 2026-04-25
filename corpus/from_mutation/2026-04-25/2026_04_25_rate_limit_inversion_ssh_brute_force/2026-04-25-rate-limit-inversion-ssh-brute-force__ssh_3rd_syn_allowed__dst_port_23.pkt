@@ -1,0 +1,11 @@
+name: 'ssh_brute_force: 3rd SYN (count=2) is dropped (impl behavior)'
+source_fw: "@xdp(eth0)\n\ndrop if pkt.proto == tcp\n       and pkt.dst_port == 22\n       and pkt.tcp.syn and not pkt.tcp.ack\n       limited by rate_limit(3, per=src_ip)\n\ncount ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22\n\nallow if pkt.proto == tcp and pkt.dst_port == 22\n\ndefault allow\n"
+state:
+  rate_limit:
+    0:
+      9.9.9.9: 2
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=23, syn=true, ack=false)
+expected:
+  compiles: true
+  bpf_action: allow

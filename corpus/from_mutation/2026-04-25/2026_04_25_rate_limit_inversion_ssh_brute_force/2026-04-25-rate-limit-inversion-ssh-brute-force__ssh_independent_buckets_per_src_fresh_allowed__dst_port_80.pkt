@@ -1,0 +1,11 @@
+name: 'ssh_brute_force: rate buckets are independent per src_ip'
+source_fw: "@xdp(eth0)\n\ndrop if pkt.proto == tcp\n       and pkt.dst_port == 22\n       and pkt.tcp.syn and not pkt.tcp.ack\n       limited by rate_limit(3, per=src_ip)\n\ncount ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22\n\nallow if pkt.proto == tcp and pkt.dst_port == 22\n\ndefault allow\n"
+state:
+  rate_limit:
+    0:
+      1.1.1.1: 99
+test_packet:
+  builder: tcp(src_ip="2.2.2.2", dst_port=80, syn=true, ack=false)
+expected:
+  compiles: true
+  bpf_action: allow
