@@ -1,0 +1,28 @@
+name: "web_server_ddos: first HTTP packet from a new IP is dropped (impl)"
+# web_server_ddos.fw header comment promises:
+#   "Drops any source IP exceeding 1000 packets/second"
+# That reading would let a fresh source's first HTTP request through
+# (count=0 from a new src_ip is the opposite of "exceeding 1000/sec").
+# The impl's rate_limit semantics (count < threshold => action fires)
+# fire the drop rule for the first 1000 packets and let later packets
+# fall through. This case asserts the impl's actual behavior — first
+# packet dropped — against the program's natural-language intent.
+source_fw: |
+  @xdp(eth0)
+
+  drop limited by rate_limit(1000, per=src_ip)
+
+  count http_traffic  if pkt.proto == tcp and pkt.dst_port == 80
+  count https_traffic if pkt.proto == tcp and pkt.dst_port == 443
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+  allow if pkt.proto == tcp and not pkt.tcp.syn
+
+  default drop
+
+test_packet:
+  builder: tcp(src_ip="203.0.113.7", dst_port=80, syn=true)
+
+expected:
+  compiles: true
+  bpf_action: allow

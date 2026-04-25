@@ -1,0 +1,31 @@
+name: "ssh_brute_force: established SSH (TCP without SYN) is allowed regardless of rate"
+# Comment claim: "Established SSH traffic (TCP without SYN) is unaffected."
+# Per impl: drop rule has `pkt.tcp.syn and not pkt.tcp.ack`; without
+# SYN, drop doesn't match. count + allow fire. Even with bucket=99
+# (well past threshold), established traffic flows. This part of the
+# program intent IS correctly captured by the impl.
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.proto == tcp
+         and pkt.dst_port == 22
+         and pkt.tcp.syn and not pkt.tcp.ack
+         limited by rate_limit(3, per=src_ip)
+
+  count ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22
+
+  allow if pkt.proto == tcp and pkt.dst_port == 22
+
+  default allow
+
+state:
+  rate_limit:
+    0:
+      "9.9.9.9": 99
+
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=22, syn=false, ack=true)
+
+expected:
+  compiles: true
+  bpf_action: allow

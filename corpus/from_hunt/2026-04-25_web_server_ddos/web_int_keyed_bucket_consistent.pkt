@@ -1,0 +1,31 @@
+name: "web_server_ddos: integer bucket key normalizes to same bucket as dotted-quad"
+# Regression for explored finding 2: state bucket keys may be either
+# strings (dotted-quad) or integers; both must normalize to the same
+# u32 the BPF map sees so interpreter and BPF can't silently disagree.
+# Here state uses the integer form (0xCB007107 = 203.0.113.7); packet
+# uses the dotted-quad form. Both should see "this src is saturated".
+source_fw: |
+  @xdp(eth0)
+
+  drop limited by rate_limit(1000, per=src_ip)
+
+  count http_traffic  if pkt.proto == tcp and pkt.dst_port == 80
+  count https_traffic if pkt.proto == tcp and pkt.dst_port == 443
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+  allow if pkt.proto == tcp and not pkt.tcp.syn
+
+  default drop
+
+test_packet:
+  builder: tcp(src_ip="203.0.113.7", dst_port=80, syn=true)
+
+state:
+  rate_limit:
+    0:
+      # 0xcb007107 = 203.0.113.7 in host-order u32.
+      3405803783: 1500
+
+expected:
+  compiles: true
+  bpf_action: drop

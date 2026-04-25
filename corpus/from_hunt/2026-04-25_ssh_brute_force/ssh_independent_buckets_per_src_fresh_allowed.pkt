@@ -1,0 +1,30 @@
+name: "ssh_brute_force: rate buckets are independent per src_ip"
+# Bucket pre-loaded for 1.1.1.1 only. A SYN from 2.2.2.2 sees its
+# own (empty) bucket and falls through normal evaluation. Per impl:
+# count=0 < 3 → drop (the impl bug from comment intent's perspective,
+# but consistent across src_ips).
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.proto == tcp
+         and pkt.dst_port == 22
+         and pkt.tcp.syn and not pkt.tcp.ack
+         limited by rate_limit(3, per=src_ip)
+
+  count ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22
+
+  allow if pkt.proto == tcp and pkt.dst_port == 22
+
+  default allow
+
+state:
+  rate_limit:
+    0:
+      "1.1.1.1": 99
+
+test_packet:
+  builder: tcp(src_ip="2.2.2.2", dst_port=22, syn=true, ack=false)
+
+expected:
+  compiles: true
+  bpf_action: allow

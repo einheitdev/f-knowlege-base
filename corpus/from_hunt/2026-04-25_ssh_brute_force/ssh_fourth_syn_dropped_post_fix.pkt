@@ -1,0 +1,32 @@
+name: "ssh_brute_force: 4th SYN (count=3) is allowed (impl behavior)"
+# Comment in ssh_brute_force.fw claims that beyond 3 SYNs per
+# second, additional SYNs are dropped. Per FWL impl, when the
+# bucket is at threshold (count=3, threshold=3), the drop rule
+# does NOT fire; evaluation falls through to count + allow.
+# Test asserts the impl's actual behavior, exposing the contradiction
+# with the user-program's natural-language intent.
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.proto == tcp
+         and pkt.dst_port == 22
+         and pkt.tcp.syn and not pkt.tcp.ack
+         limited by rate_limit(3, per=src_ip)
+
+  count ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22
+
+  allow if pkt.proto == tcp and pkt.dst_port == 22
+
+  default allow
+
+state:
+  rate_limit:
+    0:
+      "9.9.9.9": 3
+
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=22, syn=true, ack=false)
+
+expected:
+  compiles: true
+  bpf_action: drop

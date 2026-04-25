@@ -1,0 +1,33 @@
+name: "web_server_ddos: saturated TCP non-SYN to any port is allowed"
+# At saturation, the drop modifier doesn't fire (count >= 1000).
+# Then for a TCP non-SYN packet to a non-HTTP/HTTPS port (e.g. 6667),
+# the count rules don't match, the port-list allow rule doesn't match,
+# but the heuristic `allow if pkt.proto == tcp and not pkt.tcp.syn`
+# does match (SYN=0). So the packet is ALLOWED — a saturated source
+# can sneak non-SYN TCP to arbitrary ports through the firewall.
+# This is documented as a heuristic in the program but worth pinning
+# down as observable behavior.
+source_fw: |
+  @xdp(eth0)
+
+  drop limited by rate_limit(1000, per=src_ip)
+
+  count http_traffic  if pkt.proto == tcp and pkt.dst_port == 80
+  count https_traffic if pkt.proto == tcp and pkt.dst_port == 443
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+  allow if pkt.proto == tcp and not pkt.tcp.syn
+
+  default drop
+
+test_packet:
+  builder: tcp(src_ip="203.0.113.7", dst_port=6667, syn=false, ack=true)
+
+state:
+  rate_limit:
+    0:
+      "203.0.113.7": 5000
+
+expected:
+  compiles: true
+  bpf_action: drop

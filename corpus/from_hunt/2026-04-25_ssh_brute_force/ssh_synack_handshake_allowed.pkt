@@ -1,0 +1,23 @@
+name: "ssh_brute_force: SYN+ACK (handshake response) bypasses rate limit"
+# Drop rule has `not pkt.tcp.ack` so SYN+ACK doesn't match. Even with
+# rate-bucket pre-loaded above threshold, SYN+ACK flows through.
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.proto == tcp
+         and pkt.dst_port == 22
+         and pkt.tcp.syn and not pkt.tcp.ack
+         limited by rate_limit(3, per=src_ip)
+
+  count ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22
+
+  allow if pkt.proto == tcp and pkt.dst_port == 22
+
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=22, syn=true, ack=true)
+
+expected:
+  compiles: true
+  bpf_action: allow

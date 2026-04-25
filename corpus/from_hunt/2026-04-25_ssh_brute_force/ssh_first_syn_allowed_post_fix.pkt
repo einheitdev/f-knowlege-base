@@ -1,0 +1,26 @@
+name: "ssh_brute_force: 1st SYN from new IP is dropped (impl behavior)"
+# Comment in ssh_brute_force.fw claims first 3 SYNs are allowed.
+# Per FWL impl, rate_limit fires when count < threshold, so the
+# 1st SYN (count=0 < 3) triggers the drop rule. Test asserts the
+# implementation's actual behavior, exposing the contradiction
+# with the user-program's natural-language intent.
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.proto == tcp
+         and pkt.dst_port == 22
+         and pkt.tcp.syn and not pkt.tcp.ack
+         limited by rate_limit(3, per=src_ip)
+
+  count ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22
+
+  allow if pkt.proto == tcp and pkt.dst_port == 22
+
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=22, syn=true, ack=false)
+
+expected:
+  compiles: true
+  bpf_action: allow

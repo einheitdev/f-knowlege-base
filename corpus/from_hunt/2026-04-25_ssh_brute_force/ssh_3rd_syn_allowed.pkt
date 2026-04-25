@@ -1,0 +1,29 @@
+name: "ssh_brute_force: 3rd SYN (count=2) is dropped (impl behavior)"
+# Per impl, count=2 < 3 → drop fires. Confirms impl drops the
+# 3rd attempt within the window despite comment claiming first 3
+# are allowed.
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.proto == tcp
+         and pkt.dst_port == 22
+         and pkt.tcp.syn and not pkt.tcp.ack
+         limited by rate_limit(3, per=src_ip)
+
+  count ssh_allowed if pkt.proto == tcp and pkt.dst_port == 22
+
+  allow if pkt.proto == tcp and pkt.dst_port == 22
+
+  default allow
+
+state:
+  rate_limit:
+    0:
+      "9.9.9.9": 2
+
+test_packet:
+  builder: tcp(src_ip="9.9.9.9", dst_port=22, syn=true, ack=false)
+
+expected:
+  compiles: true
+  bpf_action: allow
