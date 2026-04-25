@@ -1,0 +1,29 @@
+name: 'web_server_ddos: source above 1000/sec is allowed (impl, opposite of intent)'
+source_fw: '@xdp(eth0)
+
+
+  drop limited by rate_limit(1000, per=src_ip)
+
+
+  count http_traffic  if pkt.proto == tcp and pkt.dst_port == 80
+
+  count https_traffic if pkt.proto == tcp and pkt.dst_port == 443
+
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+
+  allow if pkt.proto == tcp and not pkt.tcp.syn
+
+
+  default drop
+
+  '
+test_packet:
+  builder: tcp(src_ip="203.0.113.7", dst_port=79, syn=true)
+state:
+  rate_limit:
+    0:
+      203.0.113.7: 1000
+expected:
+  compiles: true
+  bpf_action: drop

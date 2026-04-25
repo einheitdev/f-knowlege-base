@@ -1,0 +1,9 @@
+{"ts": "2026-04-25T19:17:52.701947+00:00", "strategy": "hunt", "hits": 0, "cost_usd": 3.31}
+{"ts": "2026-04-25T19:17:52.702185+00:00", "strategy": "hunt", "hits": 1, "cost_usd": 3.05}
+{"ts": "2026-04-25T19:17:52.702321+00:00", "strategy": "hunt", "hits": 1, "cost_usd": 2.9}
+{"ts": "2026-04-25T19:17:52.702429+00:00", "strategy": "mutate", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:17:52.702534+00:00", "strategy": "mutate", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:17:52.702636+00:00", "strategy": "transfer", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:17:52.702730+00:00", "strategy": "transfer", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:19:04.534350+00:00", "strategy": "boundary_probing", "hits": 0, "cost_usd": 0.0}
+{"ts": "2026-04-25T19:19:04.534671+00:00", "strategy": "oracle_divergence", "hits": 0, "cost_usd": 0.0}

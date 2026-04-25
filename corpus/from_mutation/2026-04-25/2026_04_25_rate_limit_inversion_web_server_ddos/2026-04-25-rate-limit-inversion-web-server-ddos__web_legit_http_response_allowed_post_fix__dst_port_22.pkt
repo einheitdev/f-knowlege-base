@@ -1,0 +1,29 @@
+name: 'web_server_ddos: legit HTTP response (TCP non-SYN) dropped under threshold'
+source_fw: '@xdp(eth0)
+
+
+  drop limited by rate_limit(1000, per=src_ip)
+
+
+  count http_traffic  if pkt.proto == tcp and pkt.dst_port == 80
+
+  count https_traffic if pkt.proto == tcp and pkt.dst_port == 443
+
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+
+  allow if pkt.proto == tcp and not pkt.tcp.syn
+
+
+  default drop
+
+  '
+test_packet:
+  builder: tcp(src_ip="93.184.216.34", src_port=443, dst_port=22, syn=false, ack=true)
+state:
+  rate_limit:
+    0:
+      93.184.216.34: 5
+expected:
+  compiles: true
+  bpf_action: allow
