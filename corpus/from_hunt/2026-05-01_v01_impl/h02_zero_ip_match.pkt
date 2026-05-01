@@ -1,0 +1,16 @@
+name: "src_ip == 0.0.0.0 matches all-zero address packet"
+# Hypothesis: 0.0.0.0 IP literal evaluates to integer 0; both interp
+# and BPF should match a packet whose src_ip is 0.0.0.0. Worth a
+# boundary test because 0 is the same default the BPF prelude uses
+# for un-parsed fields.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip == 0.0.0.0
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="0.0.0.0")
+
+expected:
+  compiles: true
+  bpf_action: drop

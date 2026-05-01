@@ -1,0 +1,27 @@
+name: "negative state count: loader silently accepts, then runner crashes"
+# Hypothesis: PKT_V01_SPEC.md:96 says count must be non-negative.
+# The loader doesn't enforce this; per the spec the file should fail
+# to load. In practice the loader accepts it and the BPF map encoder
+# (`_encode_rl_value_per_cpu`) crashes the runner with
+# `struct.error: 'I' format requires 0 <= number <= 4294967295`.
+# This file therefore documents a loader gap that is fenced today
+# only by a downstream encoder check that produces a stack trace
+# rather than the spec's clean validation error.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto == tcp and pkt.dst_port == 22
+       limited by rate_limit(5, per=src_ip)
+  default allow
+
+state:
+  rate_limit:
+    0:
+      "1.2.3.4": -1
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4", dst_port=22)
+
+expected:
+  loads: false
+  compiles: true
+  bpf_action: allow

@@ -1,0 +1,17 @@
+name: "v6_internal: ULA fc00::1 source allowed by rule 1"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.src_ip in [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16]
+  allow if pkt.src_ip6 in fc00::/7
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443, 22]
+  allow if pkt.proto == udp and pkt.dst_port == 53
+  allow if pkt.proto == icmp6 and pkt.src_ip6 in fe80::/10
+  log if pkt.proto == tcp and pkt.tcp.syn and not pkt.tcp.ack
+  default drop
+
+test_packet:
+  builder: tcp6(src_ip="fc00::1", dst_ip="2001:db8::5", dst_port=8080)
+
+expected:
+  compiles: true
+  bpf_action: allow

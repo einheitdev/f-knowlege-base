@@ -1,0 +1,18 @@
+name: "loader silently accepts unknown top-level field"
+# Hypothesis (PKT_V01_SPEC.md:39): "Unknown top-level keys are a
+# validation error." But pkt.load only reads documented keys and
+# never validates the rest. Per the existing finding pattern
+# (loader-validation), this should fail to load. If it loads, that's
+# a spec violation we want to capture.
+random_unknown_key: 42
+source_fw: |
+  @xdp(eth0)
+  allow
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4")
+
+expected:
+  loads: false
+  compiles: true
+  bpf_action: allow

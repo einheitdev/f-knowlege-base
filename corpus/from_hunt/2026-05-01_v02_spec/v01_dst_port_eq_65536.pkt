@@ -1,0 +1,18 @@
+name: "v0.1: pkt.dst_port == 65536 (literal exceeds u16 range)"
+# Hypothesis: v0.1 admits port-vs-large-int comparisons; v0.2's
+# u16/u32 typing rule (FWL_V02_SPEC.md:557, "no implicit widening
+# or narrowing") would reject the same source. If v0.1 accepts and
+# v0.2 rejects, strict superset is violated for this surface.
+# Expected v0.1 outcome: program compiles (v0.1 has no u16/u32
+# distinction). The comparison is always false on real packets.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto == tcp and pkt.dst_port == 65536
+  default allow
+
+test_packet:
+  builder: tcp(src_port=12345, dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: allow   # 80 != 65536; rule does not match; default allow

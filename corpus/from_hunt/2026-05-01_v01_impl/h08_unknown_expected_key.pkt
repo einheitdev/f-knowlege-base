@@ -1,0 +1,15 @@
+name: "loader silently accepts unknown expected field"
+# Per PKT_V01_SPEC.md:39 'Extra keys inside test_packet, expected,
+# or state are also errors'.
+source_fw: |
+  @xdp(eth0)
+  allow
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4")
+
+expected:
+  loads: false
+  compiles: true
+  bpf_action: allow
+  hypothetical_unknown: 99

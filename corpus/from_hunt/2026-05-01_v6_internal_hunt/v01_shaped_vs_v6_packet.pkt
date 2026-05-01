@@ -1,0 +1,12 @@
+name: "v0.1-shaped program vs tcp6 packet — interpreter must treat pkt.proto as unreadable per spec"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.proto == tcp and pkt.dst_port == 80
+  default drop
+
+test_packet:
+  builder: tcp6(src_ip="2001:db8::1", dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: drop

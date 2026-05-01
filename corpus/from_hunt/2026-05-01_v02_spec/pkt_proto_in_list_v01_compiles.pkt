@@ -1,0 +1,22 @@
+name: "v0.1: 'pkt.proto in [tcp, udp]' grammar admits — does the analyzer?"
+# Hypothesis: v0.1 grammar accepts `pkt.proto in [tcp, udp]` because:
+#   field = value_field | enum_field | bool_field
+#   comparison = field comp_op operand | field "in" set_or_range
+#   list = "[" operand { "," operand } "]"
+#   operand = integer | ipv4 | proto_keyword
+# So `pkt.proto in [tcp, udp]` parses as `enum_field "in" list-of-proto_keywords`.
+# v0.1 spec line 245 says "element type must match the field type" — for
+# pkt.proto (enum) and proto_keywords (enum), the types match.
+# v0.2 spec line 559/711 says proto values used with `in` are a type error.
+# If v0.1 accepts and v0.2 rejects, that breaks the strict-superset claim.
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.proto in [tcp, udp]
+  default drop
+
+test_packet:
+  builder: tcp(src_port=12345, dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: allow
