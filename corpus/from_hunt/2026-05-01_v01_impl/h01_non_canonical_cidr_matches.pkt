@@ -1,0 +1,16 @@
+name: "non-canonical CIDR (host bits set) silently masks; matches different host"
+# Hypothesis: pkt.src_ip in 10.0.0.5/24 — the parser masks host bits to
+# /24 prefix, yielding 10.0.0.0/24. Both interpreter and emitter use
+# the masked prefix. So a packet from 10.0.0.99 should match. Verify
+# interp/BPF agree.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip in 10.0.0.5/24
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="10.0.0.99")
+
+expected:
+  compiles: true
+  bpf_action: drop

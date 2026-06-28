@@ -1,0 +1,39 @@
+name: 'geoip_block.fw: RU source to port 80 should drop (RU is in blocklist)'
+source_fw: '@xdp(eth0)
+
+
+  drop if pkt.src_ip  in geoip(RU, CN, KP)
+
+  drop if pkt.src_ip6 in geoip(RU, CN, KP)
+
+
+  allow if pkt.src_ip  in geoip(US, DE)
+
+  allow if pkt.src_ip6 in geoip(US, DE)
+
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+
+  allow if pkt.proto == udp and pkt.dst_port == 53
+
+
+  default drop
+
+  '
+geoip_data:
+  RU:
+  - 5.8.0.0/16
+  - 178.0.0.0/8
+  CN:
+  - 1.0.1.0/24
+  KP:
+  - 175.45.176.0/22
+  US:
+  - 8.8.8.0/24
+  DE:
+  - 46.16.0.0/16
+test_packet:
+  builder: tcp(src_ip="5.8.1.1", dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: drop

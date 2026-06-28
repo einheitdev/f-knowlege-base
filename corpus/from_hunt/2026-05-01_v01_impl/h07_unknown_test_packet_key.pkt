@@ -1,0 +1,18 @@
+name: "loader silently accepts unknown test_packet field"
+# Hypothesis (PKT_V01_SPEC.md:39): "Extra keys inside test_packet,
+# expected, or state are also errors." Note 2026-05-02: truncate_to
+# (this case's original probe) shipped under A.3 hardening, so it
+# moved into the documented set; the case now uses a genuinely
+# unknown key to keep the regression honest.
+source_fw: |
+  @xdp(eth0)
+  allow
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4")
+  hypothetical_unknown: 42
+
+expected:
+  loads: false
+  compiles: true
+  bpf_action: allow

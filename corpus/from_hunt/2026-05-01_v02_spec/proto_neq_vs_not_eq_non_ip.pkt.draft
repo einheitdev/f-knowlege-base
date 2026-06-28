@@ -1,0 +1,49 @@
+name: "pkt.proto != tcp vs not (pkt.proto == tcp) on a non-IP (ARP) frame"
+# Hypothesis per FWL_V02_SPEC.md:167:
+#   On a non-IP frame, both `pkt.proto == tcp` and `pkt.proto != tcp`
+#   evaluate to false (the != form requires the read to have
+#   succeeded, per the explicit rule at line 167). So:
+#     - `not (pkt.proto == tcp)` = not(false) = true.
+#     - `pkt.proto != tcp`       = false.
+#   The two predicates differ, so the equivalent-looking rules below
+#   produce different verdicts on the same packet.
+# This proves the spec's claim at line 936 that
+# "swapping == for != with negation" is "semantics-preserving" is
+# WRONG on non-IP frames.
+#
+# This file describes the test as a pair of programs since the
+# v0.1 .pkt format takes a single source_fw — emit one pair of
+# corpus runs (program A vs program B) sharing the same packet.
+
+# Program A — uses `pkt.proto != tcp`
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto != tcp
+  default allow
+
+# Test: an ARP frame (EtherType 0x0806) — non-IP.
+test_packet:
+  builder: arp()
+
+expected:
+  compiles: true
+  bpf_action: allow      # `pkt.proto != tcp` is FALSE on non-IP per
+                         # FWL_V02_SPEC.md:167; rule does not fire;
+                         # `default allow` runs.
+---
+name: "pkt.proto != tcp vs not (pkt.proto == tcp) — companion: not(==) form"
+# Companion program B — same packet, but the rule body is
+# `not (pkt.proto == tcp)` instead of `pkt.proto != tcp`.
+
+source_fw: |
+  @xdp(eth0)
+  drop if not (pkt.proto == tcp)
+  default allow
+
+test_packet:
+  builder: arp()
+
+expected:
+  compiles: true
+  bpf_action: drop       # `pkt.proto == tcp` is FALSE on non-IP;
+                         # `not (false)` is TRUE; rule fires.

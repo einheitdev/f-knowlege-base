@@ -1,0 +1,24 @@
+name: "Tier 2 SSH brute-force with explicit v4-establishing guard"
+# Companion to tier2_example1_dominator_v4_guard.pkt. This is the
+# fixed shape: the explicit `if pkt.src_ip in [0.0.0.0/0]:` guard
+# satisfies the dominator rule for rate_limit(per=src_ip) per
+# FWL_V02_SPEC.md:637. The dogfood example (line 1015-1022)
+# already uses this shape.
+source_fw: |
+  @xdp(eth0)
+
+  def firewall(pkt):
+    if pkt.proto == tcp and pkt.dst_port == 22:
+      if pkt.src_ip in [0.0.0.0/0]:
+        if pkt.tcp.syn and not pkt.tcp.ack:
+          if rate_limit(10, per=src_ip):
+            drop
+        allow
+    allow
+
+test_packet:
+  builder: tcp(src_ip="10.0.0.1", dst_ip="10.0.0.2", dst_port=22, syn=1)
+
+expected:
+  compiles: true
+  bpf_action: allow      # 1st SYN under the rate limit

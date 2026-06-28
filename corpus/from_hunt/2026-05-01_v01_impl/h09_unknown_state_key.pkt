@@ -1,0 +1,19 @@
+name: "loader silently accepts unknown sub-key under state"
+# Per PKT_V01_SPEC.md:39 'Extra keys inside ... state are also errors'.
+# state has only one defined sub-block (rate_limit). Anything else
+# should fail validation.
+source_fw: |
+  @xdp(eth0)
+  allow
+
+test_packet:
+  builder: tcp(src_ip="1.2.3.4")
+
+state:
+  not_a_real_block:
+    foo: 1
+
+expected:
+  loads: false
+  compiles: true
+  bpf_action: allow

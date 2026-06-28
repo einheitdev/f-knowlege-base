@@ -1,0 +1,14 @@
+name: "src_ip == 255.255.255.255 matches broadcast address"
+# Hypothesis: 0xFFFFFFFF IP literal works correctly with the unsigned
+# 'u' suffix in emitter and Python integer comparison in interp.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip == 255.255.255.255
+  default allow
+
+test_packet:
+  builder: tcp(src_ip="255.255.255.255")
+
+expected:
+  compiles: true
+  bpf_action: drop

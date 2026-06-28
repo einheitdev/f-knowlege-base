@@ -1,0 +1,28 @@
+name: "geoip_block.fw: v6 US source to port 22 should be allowed (US allowlist)"
+source_fw: |
+  @xdp(eth0)
+
+  drop if pkt.src_ip  in geoip(RU, CN, KP)
+  drop if pkt.src_ip6 in geoip(RU, CN, KP)
+
+  allow if pkt.src_ip  in geoip(US, DE)
+  allow if pkt.src_ip6 in geoip(US, DE)
+
+  allow if pkt.proto == tcp and pkt.dst_port in [80, 443]
+  allow if pkt.proto == udp and pkt.dst_port == 53
+
+  default drop
+
+geoip_data:
+  RU: ["5.8.0.0/16", "178.0.0.0/8"]
+  CN: ["1.0.1.0/24"]
+  KP: ["175.45.176.0/22"]
+  US: ["8.8.8.0/24", "2001:4860::/32"]
+  DE: ["46.16.0.0/16"]
+
+test_packet:
+  builder: tcp6(src_ip="2001:4860::8888", dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: allow

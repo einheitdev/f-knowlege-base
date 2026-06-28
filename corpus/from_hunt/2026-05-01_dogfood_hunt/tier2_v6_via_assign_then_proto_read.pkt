@@ -1,0 +1,17 @@
+name: "Tier 2: v6 active via assignment RHS, then proto read on v6 frame"
+source_fw: |
+  @xdp(eth0)
+  def firewall(pkt):
+    internal = pkt.src_ip6 in fc00::/7
+    if internal:
+      allow
+    if pkt.proto == tcp and pkt.dst_port == 80:
+      allow
+    drop
+
+test_packet:
+  builder: tcp6(src_ip="2001:db8::1", dst_ip="2001:db8::2", dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: allow

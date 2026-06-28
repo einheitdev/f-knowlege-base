@@ -1,0 +1,7 @@
+name: "Tier 2: count action \u2014 counter slot allocation"
+source_fw: "@xdp(eth0)\ndef firewall(pkt):\n  if pkt.proto == tcp:\n    count tcp_seen\n    allow\n  drop\n"
+test_packet:
+  builder: tcp(src_ip="1.2.3.5", dst_port=80)
+expected:
+  compiles: true
+  bpf_action: allow

@@ -1,0 +1,36 @@
+name: "Tier 2 spec Example #1 verbatim — does the analyser accept?"
+# Hypothesis per FWL_V02_SPEC.md:625+637 (post-strict-resolution):
+#   - rate_limit(per=src_ip) requires an IPv4-establishing dominator
+#     (line 625).
+#   - The only IPv4-establishing guards in v0.2 are conditions that
+#     read pkt.src_ip or pkt.dst_ip directly (line 637).
+#   - pkt.proto == tcp does NOT satisfy the v4 guard (line 637 names
+#     this exclusion explicitly).
+# Tier 2 Example #1 (FWL_V02_SPEC.md:747-758) has only `pkt.proto ==
+# tcp and pkt.dst_port == 22` as its outer guard. By the spec's own
+# rule, the analyser must REJECT it.
+# This corpus item locks the divergence: spec prose says valid, spec
+# rule says invalid.
+source_fw: |
+  @xdp(eth0)
+
+  def firewall(pkt):
+    if pkt.proto == tcp and pkt.dst_port == 22:
+      if pkt.tcp.syn and not pkt.tcp.ack:
+        if rate_limit(10, per=src_ip):
+          drop
+      allow
+    allow
+
+# A v4 TCP SYN to port 22 — the packet the example claims to handle.
+test_packet:
+  builder: tcp(src_ip="10.0.0.1", dst_ip="10.0.0.2", dst_port=22, syn=1)
+
+expected:
+  # Strict reading of the spec rule:
+  compiles: false
+  compile_error_pattern: "rate_limit\\(per=src_ip\\) call site does not dominate"
+
+  # Liberal reading (what the spec's prose claims):
+  # compiles: true
+  # bpf_action: allow      # 1st SYN, under the rate limit threshold

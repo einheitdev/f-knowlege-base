@@ -1,0 +1,19 @@
+name: "v0.1: pkt.dst_port == 65536 — analyzer correctly rejects"
+# Resolved 2026-05-02 — false-positive hunt hypothesis.
+# The hunt agent assumed v0.1 admitted port-vs-large-int. It does
+# not: FWL_V01_SPEC.md:404 already mandates "port value <N> outside
+# valid range 0..65535" as a compile error, and the v0.1-era case
+# h03_port_65536_overflow.pkt (2026-04-25_round2) records the
+# analyzer doing exactly that. There is no strict-superset violation
+# on this surface — both v0.1 and v0.2 reject. Kept as a regression
+# pin against the rule going dormant.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.proto == tcp and pkt.dst_port == 65536
+  default allow
+
+test_packet:
+  builder: tcp(src_port=12345, dst_port=80)
+
+expected:
+  compiles: false

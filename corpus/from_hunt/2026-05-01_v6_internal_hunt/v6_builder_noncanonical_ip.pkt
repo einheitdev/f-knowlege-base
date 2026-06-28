@@ -1,0 +1,17 @@
+name: "v6 builder rejects non-canonical IPv6 source (anti-regression)"
+# Originally a PoC for finding/2026-05-01-pkt-loader-accepts-noncanonical-ipv6-in-builder-fields
+# (the loader silently accepted non-canonical input). After the fix in
+# fwl/pkt.py:_ipv6_to_bytes, the .pkt loader rejects this file at
+# load time per PKT_V02_SPEC.md's canonicality discipline. Kept as
+# anti-regression: the load MUST fail — flipping back to silent
+# acceptance would re-open the finding.
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip6 == fc00::1
+  default allow
+
+test_packet:
+  builder: tcp6(src_ip="FC00:0:0:0:0:0:0:1", dst_port=80)
+
+expected:
+  loads: false

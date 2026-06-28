@@ -1,0 +1,17 @@
+name: "probe: pkt.dst_port == 80 on v6 ICMPv6 packet (no proto guard, dst_port unread)"
+source_fw: |
+  @xdp(eth0)
+
+  def firewall(pkt):
+    if pkt.src_ip6 in fc00::/7:
+      drop
+    if pkt.dst_port == 0:
+      drop
+    allow
+
+test_packet:
+  builder: icmp6(src_ip="2001:db8::dead", dst_ip="2001:db8::cafe")
+
+expected:
+  compiles: true
+  bpf_action: allow
