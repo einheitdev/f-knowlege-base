@@ -1,10 +1,12 @@
-name: "v0.1: pkt.dst_port == 65536 (literal exceeds u16 range)"
-# Hypothesis: v0.1 admits port-vs-large-int comparisons; v0.2's
-# u16/u32 typing rule (FWL_V02_SPEC.md:557, "no implicit widening
-# or narrowing") would reject the same source. If v0.1 accepts and
-# v0.2 rejects, strict superset is violated for this surface.
-# Expected v0.1 outcome: program compiles (v0.1 has no u16/u32
-# distinction). The comparison is always false on real packets.
+name: "v0.1: pkt.dst_port == 65536 — analyzer correctly rejects"
+# Resolved 2026-05-02 — false-positive hunt hypothesis.
+# The hunt agent assumed v0.1 admitted port-vs-large-int. It does
+# not: FWL_V01_SPEC.md:404 already mandates "port value <N> outside
+# valid range 0..65535" as a compile error, and the v0.1-era case
+# h03_port_65536_overflow.pkt (2026-04-25_round2) records the
+# analyzer doing exactly that. There is no strict-superset violation
+# on this surface — both v0.1 and v0.2 reject. Kept as a regression
+# pin against the rule going dormant.
 source_fw: |
   @xdp(eth0)
   drop if pkt.proto == tcp and pkt.dst_port == 65536
@@ -14,5 +16,4 @@ test_packet:
   builder: tcp(src_port=12345, dst_port=80)
 
 expected:
-  compiles: true
-  bpf_action: allow   # 80 != 65536; rule does not match; default allow
+  compiles: false
