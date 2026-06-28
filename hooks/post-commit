@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Post-commit hook: incrementally re-index the KB into Solr.
+#
+# Install: ln -sf ../../hooks/post-commit .git/hooks/post-commit
+# Exits silently if hone or Solr unavailable.
+
+set -euo pipefail
+
+SOLR_URL="${SOLR_URL:-http://localhost:8983/solr/hone}"
+KB_DIR="$(git rev-parse --show-toplevel)"
+
+if ! command -v hone >/dev/null 2>&1; then
+  exit 0
+fi
+
+if ! curl -sf "$SOLR_URL/admin/ping" >/dev/null 2>&1; then
+  exit 0
+fi
+
+hone index --kb "$KB_DIR" --incremental --solr-url "$SOLR_URL" \
+  >/dev/null 2>&1 || true
