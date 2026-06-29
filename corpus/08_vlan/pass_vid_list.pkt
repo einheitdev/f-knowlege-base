@@ -1,0 +1,12 @@
+name: "VID in list [10, 20, 30] matches 20"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id in [10, 20, 30]
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=20)
+
+expected:
+  compiles: true
+  bpf_action: drop

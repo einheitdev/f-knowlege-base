@@ -1,0 +1,12 @@
+name: "tagged v4: VLAN 10 + TCP dst_port 22 allowed"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.vlan_id == 10 and pkt.proto == tcp and pkt.dst_port == 22
+  default drop
+
+test_packet:
+  builder: tcp(vlan_id=10, dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: allow

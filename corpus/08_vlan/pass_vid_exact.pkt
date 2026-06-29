@@ -1,0 +1,12 @@
+name: "VID exact match drops VLAN 100"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 100
+  default allow
+
+test_packet:
+  builder: udp(vlan_id=100)
+
+expected:
+  compiles: true
+  bpf_action: drop

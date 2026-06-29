@@ -1,0 +1,12 @@
+name: "native VLAN: tag present with VID 0 matches vlan_id == 0"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.vlan_id == 0
+  default drop
+
+test_packet:
+  builder: tcp(vlan_id=0, dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: allow

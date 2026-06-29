@@ -1,0 +1,15 @@
+name: "VLAN + geoip: VID 10 from RU is dropped"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 10 and pkt.src_ip in geoip(RU)
+  default allow
+
+geoip_data:
+  RU: ["5.8.0.0/16"]
+
+test_packet:
+  builder: tcp(vlan_id=10, src_ip="5.8.1.1")
+
+expected:
+  compiles: true
+  bpf_action: drop

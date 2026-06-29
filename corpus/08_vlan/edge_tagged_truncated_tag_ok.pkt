@@ -1,0 +1,16 @@
+name: "tagged + truncated after tag: VLAN readable, L3 not"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 10
+  default allow
+
+test_packet:
+  # 14 (eth) + 4 (tag) = 18 bytes covers the full VLAN tag (the
+  # 4-byte tag spans offsets 12..16) but truncates the IPv4 header.
+  # vlan_ok is set, so the vlan_id rule still fires.
+  builder: tcp(vlan_id=10, dst_port=22)
+  truncate_to: 18
+
+expected:
+  compiles: true
+  bpf_action: drop

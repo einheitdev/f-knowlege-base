@@ -1,0 +1,12 @@
+name: "VLAN priority >= 5 matches PCP 6"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.vlan_priority >= 5
+  default drop
+
+test_packet:
+  builder: tcp(vlan_id=20, vlan_priority=6, dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: allow

@@ -1,0 +1,14 @@
+name: "VLAN + counters: count tagged management traffic"
+source_fw: |
+  @xdp(eth0)
+  count tagged if pkt.vlan_id == 10
+  allow
+
+test_packet:
+  builder: tcp(vlan_id=10, dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: allow
+  counter_changes:
+    tagged: 1

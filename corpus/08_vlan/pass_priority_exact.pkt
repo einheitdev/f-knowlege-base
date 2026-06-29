@@ -1,0 +1,12 @@
+name: "VLAN priority exact match (PCP 3)"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.vlan_priority == 3
+  default drop
+
+test_packet:
+  builder: tcp(vlan_id=5, vlan_priority=3, dst_port=80)
+
+expected:
+  compiles: true
+  bpf_action: allow

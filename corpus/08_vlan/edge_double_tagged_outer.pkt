@@ -1,0 +1,14 @@
+name: "double-tagged (QinQ): outer VID 100 is readable"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 100
+  default allow
+
+test_packet:
+  # Outer tag VID 100, inner tag VID 200. v0.4 parses the outer tag
+  # only, so pkt.vlan_id reads the outer 100.
+  builder: tcp(vlan_id=100, inner_vlan_id=200, dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: drop

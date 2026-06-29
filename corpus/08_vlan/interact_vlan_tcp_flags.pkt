@@ -1,0 +1,12 @@
+name: "VLAN + TCP flags: drop tagged SYN (conntrack-substitute interaction)"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 10 and pkt.proto == tcp and pkt.tcp.syn
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=10, dst_port=22, syn=true)
+
+expected:
+  compiles: true
+  bpf_action: drop

@@ -1,0 +1,15 @@
+name: "tagged v6: VLAN 30 + TCP dst_port 443 (L4 offset shifts by 4)"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.src_ip6 in 2001:db8::/32 and pkt.proto == tcp and pkt.dst_port == 443 and pkt.vlan_id == 30
+  default drop
+
+test_packet:
+  # The src_ip6 term activates the v6 parse path; proto == tcp guards
+  # the dst_port read. This exercises the tagged-v6 L4 offset
+  # (14 + 4 tag + 40 v6 = 58) end to end.
+  builder: tcp6(vlan_id=30, dst_port=443)
+
+expected:
+  compiles: true
+  bpf_action: allow
