@@ -1,0 +1,14 @@
+name: "DNAT 198.51.100.11:443 -> 10.0.1.6:8443"
+source_fw: |
+  @xdp(wan)
+  dnat to 10.0.1.6:8443 if pkt.proto == tcp and pkt.dst_port == 443
+  allow
+test_packet:
+  builder: tcp(src_ip="104.18.0.1", dst_ip="198.51.100.11", src_port=31000, dst_port=443, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "104.18.0.1"
+    dst_ip: "10.0.1.6"
+    dst_port: 8443

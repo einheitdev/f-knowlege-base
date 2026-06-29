@@ -1,0 +1,15 @@
+name: "SNAT TCP 10.0.0.250 -> 198.51.100.77"
+source_fw: |
+  @xdp(lan)
+  snat to 198.51.100.77 if pkt.proto == tcp
+  allow
+test_packet:
+  builder: tcp(src_ip="10.0.0.250", dst_ip="151.101.0.1", src_port=60000, dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "198.51.100.77"
+    dst_ip: "151.101.0.1"
+    src_port: 60000
+    dst_port: 80

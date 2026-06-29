@@ -1,0 +1,15 @@
+name: "unconditional masquerade then allow"
+source_fw: |
+  @xdp(lan)
+  masquerade
+  allow
+state:
+  nat:
+    masq_ip: "203.0.113.7"
+test_packet:
+  builder: tcp(src_ip="10.0.0.5", dst_ip="93.184.216.34", src_port=12345, dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "203.0.113.7"

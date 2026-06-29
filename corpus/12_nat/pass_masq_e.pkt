@@ -1,0 +1,17 @@
+name: "masquerade udp 10.2.0.7 -> 203.0.113.30"
+source_fw: |
+  @xdp(lan)
+  masquerade if pkt.proto == udp
+  allow
+state:
+  nat:
+    masq_ip: "203.0.113.30"
+test_packet:
+  builder: udp(src_ip="10.2.0.7", dst_ip="9.9.9.9", src_port=7777, dst_port=53)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "203.0.113.30"
+    dst_ip: "9.9.9.9"
+    src_port: 7777

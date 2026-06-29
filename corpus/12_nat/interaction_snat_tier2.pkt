@@ -1,0 +1,16 @@
+name: "snat inside a Tier 2 function"
+source_fw: |
+  @xdp(lan)
+  def gw(pkt):
+    if pkt.proto == tcp and pkt.dst_port == 80:
+      snat to 198.51.100.9
+      allow
+    drop
+test_packet:
+  builder: tcp(src_ip="10.0.0.5", dst_ip="93.184.216.34", src_port=12345, dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "198.51.100.9"
+    dst_port: 80

@@ -1,0 +1,10 @@
+name: "snat guarded on tcp leaves a udp packet unrewritten"
+source_fw: |
+  @xdp(lan)
+  snat to 198.51.100.9 if pkt.proto == tcp
+  allow
+test_packet:
+  builder: udp(src_ip="10.0.0.5", dst_ip="8.8.8.8", src_port=5000, dst_port=53)
+expected:
+  compiles: true
+  bpf_action: allow

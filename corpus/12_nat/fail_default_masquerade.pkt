@@ -1,0 +1,10 @@
+name: "default masquerade is rejected (default admits only allow/drop)"
+source_fw: |
+  @xdp(lan)
+  allow if pkt.proto == tcp
+  default masquerade
+test_packet:
+  builder: tcp(src_ip="10.0.0.5", dst_ip="1.1.1.1", src_port=1, dst_port=2, syn=true)
+expected:
+  compiles: false
+  compile_error_pattern: "."

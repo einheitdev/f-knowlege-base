@@ -1,0 +1,18 @@
+name: "snat then redirect to wan rewrites the source and redirects"
+source_fw: |
+  zone wan = [wan0]
+  zone lan = [lan0]
+  @xdp(lan)
+  snat to 198.51.100.9 if pkt.proto == tcp
+  redirect to wan
+  @xdp(wan)
+  drop
+ingress_zone: lan
+test_packet:
+  builder: tcp(src_ip="10.0.0.5", dst_ip="93.184.216.34", src_port=12345, dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: redirect
+  redirect_zone: wan
+  output_packet:
+    src_ip: "198.51.100.9"
