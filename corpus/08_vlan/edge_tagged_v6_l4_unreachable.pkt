@@ -1,0 +1,16 @@
+name: "tagged + IPv6 + non-TCP/UDP next header: L4 read falls through"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 30 and pkt.proto == tcp and pkt.dst_port == 80
+  default allow
+
+test_packet:
+  # ICMPv6 stands in for an IPv6 extension-header chain: the builder
+  # cannot emit ext headers, but the parser path is identical — any
+  # next_header that is not TCP/UDP leaves the L4 fields unread, so
+  # the dst_port comparison cannot fire on a tagged v6 frame.
+  builder: icmp6(vlan_id=30)
+
+expected:
+  compiles: true
+  bpf_action: allow

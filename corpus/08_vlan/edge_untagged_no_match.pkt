@@ -1,0 +1,12 @@
+name: "untagged frame: VLAN rule does not match, falls through"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 10
+  default allow
+
+test_packet:
+  builder: tcp(dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: allow

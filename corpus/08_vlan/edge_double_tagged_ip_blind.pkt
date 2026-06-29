@@ -1,0 +1,15 @@
+name: "double-tagged (QinQ): L3 unreachable, IP rule cannot match"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.src_ip in 10.0.0.0/8
+  default allow
+
+test_packet:
+  # With two stacked tags the real EtherType sits behind the inner
+  # tag, which v0.4 does not skip; the IPv4 header is never parsed so
+  # the src_ip rule falls through to the default allow.
+  builder: tcp(vlan_id=100, inner_vlan_id=200, src_ip="10.0.0.1")
+
+expected:
+  compiles: true
+  bpf_action: allow

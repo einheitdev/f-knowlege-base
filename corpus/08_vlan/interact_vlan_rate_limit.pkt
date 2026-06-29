@@ -1,0 +1,16 @@
+name: "VLAN + rate_limit: tagged source over threshold is dropped"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 10 limited by rate_limit(5, per=src_ip)
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=10, src_ip="1.2.3.4", dst_port=22)
+
+state:
+  rate_limit:
+    0: { "1.2.3.4": 5 }
+
+expected:
+  compiles: true
+  bpf_action: drop

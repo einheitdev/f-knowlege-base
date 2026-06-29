@@ -1,0 +1,15 @@
+name: "tagged + truncated inside tag: VLAN unreadable, falls through"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 10
+  default allow
+
+test_packet:
+  # 15 bytes truncates inside the 4-byte tag (needs >= 16), so the
+  # tag never parses and the vlan_id rule cannot match.
+  builder: tcp(vlan_id=10, dst_port=22)
+  truncate_to: 15
+
+expected:
+  compiles: true
+  bpf_action: allow

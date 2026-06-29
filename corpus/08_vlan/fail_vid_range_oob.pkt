@@ -1,0 +1,11 @@
+name: "VID range upper bound 9000 above 0..4095 is a compile error"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id in 4000..9000
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=10)
+
+expected:
+  compiles: false

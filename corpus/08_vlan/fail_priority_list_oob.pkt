@@ -1,0 +1,11 @@
+name: "VLAN priority list member 9 above 0..7 is a compile error"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_priority in [1, 9]
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=10)
+
+expected:
+  compiles: false

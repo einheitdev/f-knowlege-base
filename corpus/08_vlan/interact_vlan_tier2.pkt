@@ -1,0 +1,15 @@
+name: "VLAN + Tier 2: nested if on vlan_id then proto/port"
+source_fw: |
+  @xdp(eth0)
+  def filter(pkt):
+    if pkt.vlan_id == 10:
+      if pkt.proto == tcp and pkt.dst_port == 22:
+        allow
+    drop
+
+test_packet:
+  builder: tcp(vlan_id=10, dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: allow

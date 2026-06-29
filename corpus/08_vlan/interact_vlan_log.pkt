@@ -1,0 +1,17 @@
+name: "VLAN + log: log then drop tagged VLAN 10 traffic"
+source_fw: |
+  @xdp(eth0)
+  log if pkt.vlan_id == 10
+  drop if pkt.vlan_id == 10
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=10, src_ip="10.0.0.1", dst_port=22)
+
+expected:
+  compiles: true
+  bpf_action: drop
+  log_events:
+    - rule_index: 0
+      src_ip: "10.0.0.1"
+      dst_port: 22

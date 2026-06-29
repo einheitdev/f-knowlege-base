@@ -1,0 +1,12 @@
+name: "tagged v6: VLAN 30 + src_ip6 in 2001:db8::/32 allowed"
+source_fw: |
+  @xdp(eth0)
+  allow if pkt.vlan_id == 30 and pkt.src_ip6 in 2001:db8::/32
+  default drop
+
+test_packet:
+  builder: tcp6(vlan_id=30, src_ip="2001:db8::1")
+
+expected:
+  compiles: true
+  bpf_action: allow

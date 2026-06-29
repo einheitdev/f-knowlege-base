@@ -1,0 +1,12 @@
+name: "VID in range 100..199 matches 150"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id in 100..199
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=150)
+
+expected:
+  compiles: true
+  bpf_action: drop

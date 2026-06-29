@@ -1,0 +1,12 @@
+name: "VID boundary 4095 is a valid match"
+source_fw: |
+  @xdp(eth0)
+  drop if pkt.vlan_id == 4095
+  default allow
+
+test_packet:
+  builder: tcp(vlan_id=4095)
+
+expected:
+  compiles: true
+  bpf_action: drop
