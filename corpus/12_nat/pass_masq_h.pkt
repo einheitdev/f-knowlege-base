@@ -1,0 +1,16 @@
+name: "masquerade tcp 192.168.20.5 -> 203.0.113.82 (dst 443)"
+source_fw: |
+  @xdp(lan)
+  masquerade if pkt.proto == tcp and pkt.dst_port == 443
+  allow
+state:
+  nat:
+    masq_ip: "203.0.113.82"
+test_packet:
+  builder: tcp(src_ip="192.168.20.5", dst_ip="172.217.0.1", src_port=4100, dst_port=443, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "203.0.113.82"
+    src_port: 4100

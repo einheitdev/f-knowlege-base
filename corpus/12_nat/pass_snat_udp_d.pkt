@@ -1,0 +1,15 @@
+name: "SNAT UDP 10.1.2.3 -> 203.0.113.250"
+source_fw: |
+  @xdp(lan)
+  snat to 203.0.113.250 if pkt.proto == udp
+  allow
+test_packet:
+  builder: udp(src_ip="10.1.2.3", dst_ip="140.82.112.3", src_port=33333, dst_port=53)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "203.0.113.250"
+    dst_ip: "140.82.112.3"
+    src_port: 33333
+    dst_port: 53

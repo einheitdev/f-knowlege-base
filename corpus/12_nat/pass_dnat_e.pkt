@@ -1,0 +1,14 @@
+name: "DNAT 203.0.113.6:8080 -> 192.168.0.9:80"
+source_fw: |
+  @xdp(wan)
+  dnat to 192.168.0.9:80 if pkt.proto == tcp and pkt.dst_port == 8080
+  allow
+test_packet:
+  builder: tcp(src_ip="151.101.0.1", dst_ip="203.0.113.6", src_port=45000, dst_port=8080, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "151.101.0.1"
+    dst_ip: "192.168.0.9"
+    dst_port: 80

@@ -1,0 +1,10 @@
+name: "snat does not rewrite an IPv6 frame (NAT is IPv4-only in v0.4)"
+source_fw: |
+  @xdp(lan)
+  snat to 198.51.100.9 if pkt.proto == tcp
+  allow
+test_packet:
+  builder: tcp6(src_ip="2001:db8::5", dst_ip="2001:db8::1", src_port=12345, dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow

@@ -1,0 +1,16 @@
+name: "masquerade tcp 10.10.0.3 -> 198.51.100.83 (dst 80)"
+source_fw: |
+  @xdp(lan)
+  masquerade if pkt.proto == tcp and pkt.dst_port == 80
+  allow
+state:
+  nat:
+    masq_ip: "198.51.100.83"
+test_packet:
+  builder: tcp(src_ip="10.10.0.3", dst_ip="13.107.21.200", src_port=5100, dst_port=80, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "198.51.100.83"
+    src_port: 5100

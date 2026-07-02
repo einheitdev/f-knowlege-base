@@ -1,0 +1,14 @@
+name: "DNAT 198.51.100.2:22 -> 10.0.0.22:2222"
+source_fw: |
+  @xdp(wan)
+  dnat to 10.0.0.22:2222 if pkt.proto == tcp and pkt.dst_port == 22
+  allow
+test_packet:
+  builder: tcp(src_ip="140.82.112.3", dst_ip="198.51.100.2", src_port=41000, dst_port=22, syn=true)
+expected:
+  compiles: true
+  bpf_action: allow
+  output_packet:
+    src_ip: "140.82.112.3"
+    dst_ip: "10.0.0.22"
+    dst_port: 2222
